@@ -1,23 +1,36 @@
 <script setup lang="ts">
 import { reactive, watchEffect, watch, ref, onMounted } from 'vue'
+import { toast } from 'vue3-toastify';
+import 'vue3-toastify/dist/index.css'
 // import { useRouter } from 'vue-router'
 
 // const router = useRouter()
+interface Form {
+  email: string,
+  password: string,
+  agree: boolean,
+}
 
-const form = reactive({
+interface FormError {
+  email: string | null,
+  password: string | null,
+  agree: string | null,
+}
+
+const form = reactive<Form>({
   email: '',
   password: '',
   agree: false,
 })
 
-const errors = reactive<{ email: string | null; password: string | null; agree: string | null }>({
+const errors = reactive<FormError>({
   email: null,
   password: null,
   agree: null,
 })
 
 const loading = ref(false)
-const toast = (msg: string) => alert(msg) // псевдо-тост
+// const toast = (msg: string) => alert(msg) // псевдо-тост
 
 onMounted(() => {
   try {
@@ -49,10 +62,13 @@ async function submit() {
   loading.value = true
   try {
     await new Promise((r) => setTimeout(r, 400)) // имитация API
-    toast('Account created')
+    toast.success('Account created')
     // router.push('/done')
   } finally {
-    loading.value = false
+    loading.value = false;
+    form.agree = false;
+    form.email = '';
+    form.password = '';
   }
 }
 </script>
@@ -78,6 +94,7 @@ form {
   flex-direction: column;
   gap: 16px;
   max-width: 340px;
+  width: 100%;
   padding: 24px;
   background: #fff;
   border-radius: 8px;
@@ -123,5 +140,6 @@ button {
   border: none;
   background: #0074f0;
   color: white;
+  cursor: pointer;
 }
 </style>
