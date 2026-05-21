@@ -1,15 +1,11 @@
 <script setup lang="ts">
-import { reactive, watchEffect, watch, ref, onMounted } from 'vue'
+import { reactive, watchEffect, ref } from 'vue'
 import { toast } from 'vue3-toastify';
 import 'vue3-toastify/dist/index.css'
+import { useDraftState } from './composables/useDraftState';
 // import { useRouter } from 'vue-router'
 
 // const router = useRouter()
-interface Form {
-  email: string,
-  password: string,
-  agree: boolean,
-}
 
 interface FormError {
   email: string | null,
@@ -17,7 +13,7 @@ interface FormError {
   agree: string | null,
 }
 
-const form = reactive<Form>({
+const form = useDraftState('signup: draft', {
   email: '',
   password: '',
   agree: false,
@@ -32,30 +28,11 @@ const errors = reactive<FormError>({
 const loading = ref(false)
 // const toast = (msg: string) => alert(msg) // псевдо-тост
 
-onMounted(() => {
-  try {
-    const raw = localStorage.getItem('signup:draft')
-    if (!raw) return
-    const data = JSON.parse(raw)
-    Object.assign(form, data)
-  } catch {
-    /* ignore */
-  }
-})
-
 watchEffect(() => {
-  errors.email = /.+@.+/.test(form.email) ? null : 'Invalid email'
-  errors.password = form.password.length >= 8 ? null : 'min length: 8'
-  errors.agree = form.agree ? null : 'You must agree'
+  errors.email = /.+@.+/.test(form.value.email) ? null : 'Invalid email'
+  errors.password = form.value.password.length >= 8 ? null : 'min length: 8'
+  errors.agree = form.value.agree ? null : 'You must agree'
 })
-
-watch(
-  form,
-  () => {
-    localStorage.setItem('signup:draft', JSON.stringify(form))
-  },
-  { deep: true },
-)
 
 async function submit() {
   if (errors.email || errors.password || errors.agree) return
@@ -66,9 +43,9 @@ async function submit() {
     // router.push('/done')
   } finally {
     loading.value = false;
-    form.agree = false;
-    form.email = '';
-    form.password = '';
+    form.value.agree = false;
+    form.value.email = '';
+    form.value.password = '';
   }
 }
 </script>
