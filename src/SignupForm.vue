@@ -4,6 +4,7 @@ import { toast } from 'vue3-toastify';
 import 'vue3-toastify/dist/index.css'
 import { useDraftState } from './composables/useDraftState';
 import { useValidations, validationRules } from './composables/useValidations'
+import { useFormState } from './composables/useFormState';
 // import { useRouter } from 'vue-router'
 
 // const router = useRouter()
@@ -13,6 +14,8 @@ const form = useDraftState('signup: draft', {
   password: '',
   agree: false,
 })
+
+const { state: formState, handlers, markAllBlurred } = useFormState(form.value)
 
 const { errors, isValid } = useValidations(form.value, {
   email: [validationRules.email('Invalid email')],
@@ -24,6 +27,7 @@ const loading = ref(false)
 // const toast = (msg: string) => alert(msg) // псевдо-тост
 
 async function submit() {
+  markAllBlurred()
   if (!isValid.value) return
   loading.value = true
   try {
@@ -41,14 +45,14 @@ async function submit() {
 
 <template>
   <form @submit.prevent="submit">
-    <label>Email <input v-model="form.email" /></label>
-    <span class="error" v-if="errors.email">{{ errors.email }}</span>
+    <label>Email <input v-model="form.email" v-on="handlers.email" /></label>
+    <span class="error" v-if="errors.email && formState.email.blurred">{{ errors.email }}</span>
 
-    <label>Password <input type="password" v-model="form.password" /></label>
-    <span class="error" v-if="errors.password">{{ errors.password }}</span>
+    <label>Password <input type="password" v-model="form.password" v-on="handlers.password" /></label>
+    <span class="error" v-if="errors.password && formState.password.blurred">{{ errors.password }}</span>
 
-    <label><input type="checkbox" v-model="form.agree" /> I agree</label>
-    <span class="error" v-if="errors.agree">{{ errors.agree }}</span>
+    <label><input type="checkbox" v-model="form.agree" v-on="handlers.agree" /> I agree</label>
+    <span class="error" v-if="errors.agree && formState.agree.blurred">{{ errors.agree }}</span>
 
     <button :disabled="loading">Create account</button>
   </form>
