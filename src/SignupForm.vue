@@ -1,17 +1,12 @@
 <script setup lang="ts">
-import { reactive, watchEffect, ref } from 'vue'
+import { ref } from 'vue'
 import { toast } from 'vue3-toastify';
 import 'vue3-toastify/dist/index.css'
 import { useDraftState } from './composables/useDraftState';
+import { useValidations, validationRules } from './composables/useValidations'
 // import { useRouter } from 'vue-router'
 
 // const router = useRouter()
-
-interface FormError {
-  email: string | null,
-  password: string | null,
-  agree: string | null,
-}
 
 const form = useDraftState('signup: draft', {
   email: '',
@@ -19,23 +14,17 @@ const form = useDraftState('signup: draft', {
   agree: false,
 })
 
-const errors = reactive<FormError>({
-  email: null,
-  password: null,
-  agree: null,
+const { errors, isValid } = useValidations(form.value, {
+  email: [validationRules.email('Invalid email')],
+  password: [validationRules.minLength(8, 'min length: 8 symbols')],
+  agree: [validationRules.required('Your consent is necessary')],
 })
 
 const loading = ref(false)
 // const toast = (msg: string) => alert(msg) // псевдо-тост
 
-watchEffect(() => {
-  errors.email = /.+@.+/.test(form.value.email) ? null : 'Invalid email'
-  errors.password = form.value.password.length >= 8 ? null : 'min length: 8'
-  errors.agree = form.value.agree ? null : 'You must agree'
-})
-
 async function submit() {
-  if (errors.email || errors.password || errors.agree) return
+  if (!isValid.value) return
   loading.value = true
   try {
     await new Promise((r) => setTimeout(r, 400)) // имитация API
