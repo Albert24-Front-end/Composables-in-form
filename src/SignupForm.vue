@@ -9,13 +9,13 @@ import { useFormState } from './composables/useFormState';
 
 // const router = useRouter()
 
-const form = useDraftState('signup: draft', {
+const { state: form, reset: resetForm } = useDraftState('signup: draft', {
   email: '',
   password: '',
   agree: false,
 })
 
-const { state: formState, handlers, markAllBlurred } = useFormState(form.value)
+const { state: formState, handlers, markAllBlurred, resetAll } = useFormState(form.value)
 
 const { errors, isValid } = useValidations(form.value, {
   email: [validationRules.email('Invalid email')],
@@ -34,11 +34,11 @@ async function submit() {
     await new Promise((r) => setTimeout(r, 400)) // имитация API
     toast.success('Account created')
     // router.push('/done')
+
+    resetForm() // 1. Сбрасываем значения полей (и обновляем LocalStorage)
+    resetAll() // 2. Сбрасываем флаги blurred/touched, чтобы UI не показал ошибки пустых полей
   } finally {
     loading.value = false;
-    form.value.agree = false;
-    form.value.email = '';
-    form.value.password = '';
   }
 }
 </script>

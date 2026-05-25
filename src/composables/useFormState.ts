@@ -34,7 +34,6 @@ export function useFormState<T extends Record<string, unknown>>(fields: T) {
     function markDirty(field: keyof T) {
         state.value[field].dirty = true
         state.value[field].touched = true
-        state.value[field].blurred = true
     }
 
     function resetField(field: keyof T) {
@@ -44,9 +43,10 @@ export function useFormState<T extends Record<string, unknown>>(fields: T) {
 
     function resetAll() {
         Object.keys(state.value).forEach((key) => {
-        const field = key as keyof T
-        state.value[field].touched = false
-        state.value[field].blurred = false
+            const field = key as keyof T
+            state.value[field].touched = false
+            state.value[field].blurred = false
+            state.value[field].dirty = false
         })
     }
 
@@ -64,13 +64,13 @@ export function useFormState<T extends Record<string, unknown>>(fields: T) {
 
     function hasAnyTouched() {
         return Object.values(state.value).some(
-        (fieldState) => (fieldState as FormState<T>[keyof T]).touched,
+            (fieldState) => (fieldState as FormState<T>[keyof T]).touched,
         )
     }
 
     function areAllTouched() {
         return Object.values(state.value).every(
-        (fieldState) => (fieldState as FormState<T>[keyof T]).touched,
+            (fieldState) => (fieldState as FormState<T>[keyof T]).touched,
         )
     }
 
@@ -79,7 +79,6 @@ export function useFormState<T extends Record<string, unknown>>(fields: T) {
             const field = key as keyof T
             state.value[field].blurred = true
             state.value[field].touched = true
-            state.value[field].dirty = true
         })
     }
 
@@ -88,13 +87,13 @@ export function useFormState<T extends Record<string, unknown>>(fields: T) {
         (acc, key) => {
             const field = key as keyof T
             acc[field] = {
-                focus: () => markTouched(field),
-                blur: () => markBlurred(field),
-                dirty: () => markBlurred(field),
+              focus: () => markTouched(field),
+              blur: () => markBlurred(field),
+              input: () => markDirty(field),
             }
             return acc
         },
-        {} as Record<keyof T, { focus: () => void; blur: () => void, dirty: () => void }>,
+        {} as Record<keyof T, { focus: () => void; blur: () => void, input: () => void }>,
         )
     })
 
@@ -114,4 +113,4 @@ export function useFormState<T extends Record<string, unknown>>(fields: T) {
         areAllTouched,
     }
 }
-// task 2 - create seperate widely customized component Field.vue for inputs label + span. so that it could contain not only input
+// task 2 - create seperate widely customized component Field.vue for inputs label + span, so that it could contain not only input

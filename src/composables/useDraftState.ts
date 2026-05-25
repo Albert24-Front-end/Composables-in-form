@@ -1,7 +1,7 @@
 import { useLocalStorage } from "@vueuse/core";
 
 export function useDraftState<T extends Record<string, unknown>>(key: string, initialState: T) {
-    return useLocalStorage(key, initialState, {
+    const state = useLocalStorage(key, initialState, {
         serializer: {
             read: (value: string) => {
                 try {
@@ -13,4 +13,11 @@ export function useDraftState<T extends Record<string, unknown>>(key: string, in
             write: (value: T) => JSON.stringify(value),
         }
     })
+
+    const reset = () => {
+      // Используем structuredClone, чтобы сделать глубокую копию initialState и не мутировать исходный объект.
+      state.value = structuredClone(initialState);
+    }
+
+    return { state, reset}
 }
