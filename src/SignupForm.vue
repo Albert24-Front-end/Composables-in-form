@@ -5,6 +5,7 @@ import 'vue3-toastify/dist/index.css'
 import { useDraftState } from './composables/useDraftState';
 import { useValidations, validationRules } from './composables/useValidations'
 import { useFormState } from './composables/useFormState';
+import FormField from './components/FormField.vue';
 // import { useRouter } from 'vue-router'
 
 // const router = useRouter()
@@ -47,15 +48,15 @@ async function submit() {
 
 <template>
   <form @submit.prevent="submit">
-    <label>Email <input v-model="form.email" v-on="handlers.email" /></label>
-    <span class="error" v-if="errors.email && formState.email.blurred">{{ errors.email }}</span>
-
-    <label>Password <input type="password" v-model="form.password" v-on="handlers.password" /></label>
-    <span class="error" v-if="errors.password && formState.password.blurred">{{ errors.password }}</span>
-
-    <label><input type="checkbox" v-model="form.agree" v-on="handlers.agree" /> I agree</label>
-    <span class="error" v-if="errors.agree && formState.agree.blurred">{{ errors.agree }}</span>
-
+    <FormField label="Email" :error="errors.email" :blurred="formState.email.blurred">
+      <input v-model="form.email" v-on="handlers.email" />
+    </FormField>
+    <FormField label="Password" :error="errors.password" :blurred="formState.password.blurred">
+      <input type="password" v-model="form.password" v-on="handlers.password" />
+    </FormField>
+    <FormField label="" :error="errors.agree" :blurred="formState.agree.blurred">
+      <input type="checkbox" v-model="form.agree" v-on="handlers.agree" /> I agree
+    </FormField>
     <button :disabled="loading || isChecking">{{ isChecking ? 'Checking...' : 'Create account' }}</button>
   </form>
 </template>
@@ -77,33 +78,7 @@ form {
   font-family: system-ui, sans-serif;
 }
 
-label {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  font-size: 14px;
-  color: #333;
-}
 
-label:has(input[type='checkbox']) {
-  flex-direction: row;
-  align-items: center;
-}
-
-input[type='text'],
-input[type='password'],
-input[type='email'] {
-  padding: 8px 10px;
-  border-radius: 6px;
-  border: 1px solid #ccc;
-  font-size: 14px;
-}
-
-.error {
-  color: #d33;
-  font-size: 12px;
-  margin-top: -8px;
-}
 
 button {
   padding: 10px 14px;
