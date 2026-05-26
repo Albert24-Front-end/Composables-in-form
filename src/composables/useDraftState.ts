@@ -15,8 +15,8 @@ export function useDraftState<T extends Record<string, unknown>>(key: string, in
     })
 
     const reset = () => {
-      // Используем structuredClone, чтобы сделать глубокую копию initialState и не мутировать исходный объект.
-      state.value = structuredClone(initialState);
+      // Используем structuredClone в рамках Object.assign, чтобы сделать глубокую копию initialState, не мутировать исходный объект и не разрывать реактивную ссылку.
+      Object.assign(state.value, structuredClone(initialState))
     }
 
     return { state, reset}

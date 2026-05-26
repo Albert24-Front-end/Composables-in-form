@@ -17,8 +17,8 @@ const { state: form, reset: resetForm } = useDraftState('signup: draft', {
 
 const { state: formState, handlers, markAllBlurred, resetAll } = useFormState(form.value)
 
-const { errors, isValid } = useValidations(form.value, {
-  email: [validationRules.email('Invalid email')],
+const { errors, isChecking, isValid, validateAll } = useValidations(form.value, {
+  email: [validationRules.email('Invalid email'), validationRules.checkEmailTaken(25, 'Your email is too long or already taken')],
   password: [validationRules.minLength(8, 'min length: 8 symbols')],
   agree: [validationRules.required('Your consent is necessary')],
 })
@@ -28,7 +28,9 @@ const loading = ref(false)
 
 async function submit() {
   markAllBlurred()
+  await validateAll()
   if (!isValid.value) return
+
   loading.value = true
   try {
     await new Promise((r) => setTimeout(r, 400)) // имитация API
@@ -54,7 +56,7 @@ async function submit() {
     <label><input type="checkbox" v-model="form.agree" v-on="handlers.agree" /> I agree</label>
     <span class="error" v-if="errors.agree && formState.agree.blurred">{{ errors.agree }}</span>
 
-    <button :disabled="loading">Create account</button>
+    <button :disabled="loading || isChecking">{{ isChecking ? 'Checking...' : 'Create account' }}</button>
   </form>
 </template>
 

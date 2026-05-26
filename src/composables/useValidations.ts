@@ -1,7 +1,7 @@
-import { ref, computed, watchEffect } from 'vue'
+import { ref, computed, watch } from 'vue'
 
 export type ValidationRule<T = unknown> = {
-    validator: (value: T) => boolean
+    validator: (value: T) => boolean | Promise<boolean>
     message: string
 }
 export type ValidationRules<T extends Record<string, unknown>> = {
@@ -20,8 +20,9 @@ export function useValidations<T extends Record<string, unknown>>(data: T, rules
         }, {} as ValidationErrors<T>)
     )
 
+    const isChecking = ref(false)
     // Validate a single field
-    function validateField(field: keyof T) {
+    async function validateField(field: keyof T) {
         const fieldRules = rules[field];
 
         if (!fieldRules) {
@@ -30,7 +31,7 @@ export function useValidations<T extends Record<string, unknown>>(data: T, rules
         }
 
         for (const rule of fieldRules) {
-            if (!rule.validator(data[field])) {
+            if (!await rule.validator(data[field])) {
                 errors.value[field] = rule.message;
                 return false;
             }
@@ -41,14 +42,16 @@ export function useValidations<T extends Record<string, unknown>>(data: T, rules
     }
 
     // Validate all fields
-    function validateAll() {
-        let isValid = true;
+    async function validateAll() {
+        isChecking.value = true
+        let valid = true;
         for (const field in data) {
-            if (!validateField(field)) {
-                isValid = false;
+            if (!await validateField(field)) {
+                valid = false;
             }
         }
-        return isValid;
+        isChecking.value = false
+        return valid;
     }
 
     // Check if form is valid
@@ -62,11 +65,19 @@ export function useValidations<T extends Record<string, unknown>>(data: T, rules
     })
 
     // Auto-validate on data changes
-    watchEffect(() => {
-        validateAll()
-    })
+    let timeout: ReturnType<typeof setTimeout>
+    watch(
+      () => data, // Следим за объектом данных
+      () => {
+        clearTimeout(timeout)
+        timeout = setTimeout(async () => {
+          await validateAll()
+        }, 300) // 300 мс — оптимальная задержка для форм (1000 мс ощущается как сильный лаг)
+      },
+      { deep: true, immediate: true }, // deep: true отслеживает каждое поле внутри объекта
+    )
 
-    return { errors, validateField, validateAll, isValid, hasErrors }
+    return { errors, validateField, validateAll, isValid, hasErrors, isChecking }
 }
 
 
@@ -95,6 +106,14 @@ export const validationRules = {
   maxLength: (max: number, message?: string): ValidationRule<string> => ({
     validator: (value: string) => value.length <= max,
     message: message || `Maximum length is ${max} characters`,
+  }),
+
+  checkEmailTaken: (max: number, message?: string): ValidationRule<string> => ({
+    validator: async (value: string) => {
+        await new Promise (resolve => setTimeout(resolve, 1000))
+        return value.length <= max
+    },
+    message: message || `Your email has less than ${max} characters and is unique`,
   }),
 
   pattern: (regex: RegExp, message = 'Invalid format'): ValidationRule<string> => ({
